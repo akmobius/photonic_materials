@@ -2,22 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def get_meta_atom_results(wavelength, h_range, n_core, n_sub):
-    """Computes T and Phase using TMM logic [Source: 3692-3694]"""
+    """Computes T and Phase using TMM logic"""
     k0 = 2 * np.pi / wavelength
     eta0 = 376.73
     Y0, Yc, Ys = 1.0/eta0, n_core/eta0, n_sub/eta0
     
-    # Matching matrices D [Source: 1283, 3687]
+    # Matching matrices D 
     D01 = 0.5 * np.array([[1 + Yc/Y0, 1 - Yc/Y0], [1 - Yc/Y0, 1 + Yc/Y0]])
     D1s = 0.5 * np.array([[1 + Ys/Yc, 1 - Ys/Yc], [1 - Ys/Yc, 1 + Ys/Yc]])
     
     trans_list, phase_list = [], []
     for h in h_range:
-        # Propagation matrix P [Source: 1303, 3689]
+        # Propagation matrix P
         phi = n_core * k0 * h
         P1 = np.array([[np.exp(1j * phi), 0], [0, np.exp(-1j * phi)]])
         M = D01 @ P1 @ D1s
-        t = 1.0 / M[0, 0] # [Source: 3694]
+        t = 1.0 / M[0, 0] 
         trans_list.append(np.abs(t)**2)
         phase_list.append(np.angle(t))
     return np.array(trans_list), np.array(phase_list)
