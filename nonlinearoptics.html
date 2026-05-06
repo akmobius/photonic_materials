@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NLO Study Tool — MIT / Fujimoto</title>
+<style>
+/* Refined Styles for Antigravity Compatibility */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #ffffff;
+  --bg2: #f5f5f3;
+  --bg3: #efefec;
+  --text: #1a1a18;
+  --text2: #666660;
+  --border: rgba(0,0,0,0.12);
+  --info-bg: #E6F1FB;
+  --info-text: #0C447C;
+  --info-border: #378ADD;
+  --success-bg: #E1F5EE;
+  --success-text: #0F6E56;
+  --danger-bg: #FAECE7;
+  --danger-text: #993C1D;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1a;
+    --bg2: #252523;
+    --bg3: #2e2e2b;
+    --text: #f0f0ec;
+    --text2: #aaaaA0;
+    --border: rgba(255,255,255,0.1);
+    --info-bg: #042C53;
+    --info-text: #85B7EB;
+    --info-border: #185FA5;
+  }
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg3);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+#app {
+  max-width: 740px;
+  margin: 0 auto;
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+  border: 0.5px solid var(--border);
+  padding: 2rem;
+}
+
+.header { margin-bottom: 1.5rem; }
+.header h1 { font-size: 22px; font-weight: 600; }
+.header p { font-size: 13px; color: var(--text2); }
+
+.tab-bar { display: flex; gap: 8px; margin-bottom: 1.5rem; border-bottom: 0.5px solid var(--border); padding-bottom: 12px; }
+.tab { background: none; border: 0.5px solid transparent; border-radius: var(--radius); padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--text2); }
+.tab.active { background: var(--bg2); color: var(--text); font-weight: 500; border-color: var(--border); }
+
+.topic-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+.pill { font-size: 12px; padding: 4px 10px; border-radius: 99px; border: 0.5px solid var(--border); background: var(--bg2); cursor: pointer; color: var(--text2); }
+.pill.active { background: var(--info-bg); border-color: var(--info-border); color: var(--info-text); }
+
+.card { width: 100%; min-height: 180px; border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem; cursor: pointer; background: var(--bg); margin-bottom: 1rem; }
+.card-tag { font-size: 11px; color: var(--text2); border: 0.5px solid var(--border); border-radius: 4px; padding: 2px 6px; margin-bottom: 10px; display: inline-block; }
+.card-q { font-size: 16px; font-weight: 500; line-height: 1.5; }
+.card-a { margin-top: 15px; padding-top: 15px; border-top: 0.5px solid var(--border); display: none; font-size: 14px; color: var(--text2); line-height: 1.6; }
+.card-a.shown { display: block; }
+
+.btn { padding: 8px 16px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--bg); cursor: pointer; font-size: 13px; }
+.btn.primary { background: var(--info-bg); color: var(--info-text); border-color: var(--info-border); }
+.btn.success { background: var(--success-bg); color: var(--success-text); }
+.btn.danger { background: var(--danger-bg); color: var(--danger-text); }
+
+textarea, input { width: 100%; padding: 10px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 10px; }
+.ai-box { background: var(--bg2); padding: 1rem; border-radius: var(--radius); font-size: 14px; min-height: 50px; white-space: pre-wrap; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="header">
+    <p>MIT · 6.634 · Fujimoto</p>
+    <h1>Nonlinear Optics Study Tool</h1>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('flashcard')">Flashcards</button>
+    <button class="tab" onclick="showTab('problem')">Problem Solver</button>
+  </div>
+
+  <div id="tab-flashcard">
+    <div class="topic-row" id="topic-pills"></div>
+    <div id="card-container" class="card" onclick="reveal()">
+      <span class="card-tag" id="tag">Select a topic</span>
+      <div class="card-q" id="question">Click a topic above to begin your review.</div>
+      <div class="card-a" id="answer"></div>
+    </div>
+    <div id="controls" style="display:none; gap:8px;">
+      <button class="btn danger" onclick="mark(false)">Missed</button>
+      <button class="btn success" onclick="mark(true)">Got it</button>
+      <button class="btn" onclick="next()">Skip</button>
+    </div>
+  </div>
+
+  <div id="tab-problem" style="display:none;">
+    <input type="text" id="api-key" placeholder="Enter Gemini API Key">
+    <textarea id="prob-input" placeholder="Paste your NLO problem here..."></textarea>
+    <button class="btn primary" onclick="solve()">Solve Problem</button>
+    <div id="solution" class="ai-box" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+const DATA = {
+  wave: [
+    { q: "Define group velocity dispersion (GVD). What are the signs of normal and anomalous dispersion?", a: "GVD is the second derivative of the wavevector with respect to frequency. Normal dispersion occurs when shorter wavelengths travel slower (GVD > 0). Anomalous dispersion occurs when shorter wavelengths travel faster (GVD < 0), typically seen in silica fiber above 1.3 microns." },
+    { q: "What is the walk-off length in pulsed NLO?", a: "The walk-off length is the distance over which two pulses at different frequencies separate by one pulse width due to group velocity mismatch. It limits the effective interaction length." },
+    { q: "What is phase-velocity mismatch?", a: "It is the difference in phase velocity between the interacting waves, usually expressed as delta k. A nonzero delta k leads to a phase shift that can cause destructive interference and reduced conversion efficiency." },
+    { q: "How is the Sellmeier equation used in nonlinear optics?", a: "It is an empirical relationship between refractive index and wavelength for a particular transparent medium, used to calculate dispersion and find phase-matching conditions." }
+  ],
+  chi: [
+    { q: "What physical condition is required for second-order susceptibility to be nonzero?", a: "The medium must lack inversion symmetry (non-centrosymmetric). In centrosymmetric media, second-order effects vanish." },
+    { q: "How is the nonlinear refractive index n2 related to third-order susceptibility?", a: "n2 is proportional to the real part of the third-order susceptibility. It describes the intensity-dependent change in refractive index, causing effects like self-phase modulation." },
+    { q: "What is Miller's Rule?", a: "An empirical rule stating that the nonlinear susceptibility chi(2) is proportional to the product of the linear susceptibilities at the interacting frequencies. It helps estimate nonlinear coefficients of new materials." },
+    { q: "Explain the difference between resonant and non-resonant nonlinearities.", a: "Resonant nonlinearities occur when the optical frequency is close to a material transition, leading to large effects but high absorption. Non-resonant nonlinearities operate far from transitions, offering lower absorption but weaker effects, usually requiring higher intensities." }
+  ],
+  shg: [
+    { q: "Explain the phase-matching condition in SHG.", a: "Phase matching requires the wavevectors of the fundamental and second harmonic to satisfy delta k = 0. This ensures constructive interference of the generated signal over the crystal length." },
+    { q: "What are Manley-Rowe relations?", a: "They describe the conservation of photon number flux in nonlinear interactions. For example, in sum-frequency generation, for every photon created at the sum frequency, one photon from each input frequency must be destroyed." },
+    { q: "What is quasi-phase matching (QPM)?", a: "A technique where the nonlinear coefficient of the crystal is periodically inverted to correct the phase mismatch at regular intervals (the coherence length), allowing continuous growth of the nonlinear signal." },
+    { q: "What is the difference between Type I and Type II phase matching?", a: "In Type I, the two fundamental photons have the same polarization. In Type II, they have orthogonal polarizations (e.g., one ordinary, one extraordinary) to achieve phase matching." }
+  ],
+  soliton: [
+    { q: "What is a fundamental soliton (N=1)?", a: "A pulse where the spectral broadening from self-phase modulation is exactly balanced by the compression of anomalous group velocity dispersion, resulting in a shape-preserving pulse." },
+    { q: "What is the soliton self-frequency shift?", a: "A continuous red-shift of the soliton's center frequency caused by stimulated Raman scattering, where higher frequency components of the pulse pump the lower frequency components." },
+    { q: "What is self-phase modulation (SPM)?", a: "A nonlinear optical effect where an ultrashort pulse of light traveling in a medium induces a time-varying refractive index, which in turn causes a phase shift and spectral broadening of the pulse itself." },
+    { q: "What is the physical mechanism of cross-phase modulation (XPM)?", a: "XPM occurs when the intensity of one optical pulse changes the refractive index of the medium, thereby modulating the phase of a second, co-propagating pulse at a different wavelength." }
+  ]
+};
+
+let currentSet = [];
+let idx = 0;
+
+function showTab(t) {
+  document.getElementById('tab-flashcard').style.display = t === 'flashcard' ? 'block' : 'none';
+  document.getElementById('tab-problem').style.display = t === 'problem' ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach(btn => btn.classList.toggle('active', btn.innerText.toLowerCase().includes(t)));
+}
+
+function init() {
+  const container = document.getElementById('topic-pills');
+  Object.keys(DATA).forEach(key => {
+    const p = document.createElement('button');
+    p.className = 'pill';
+    p.innerText = key.toUpperCase();
+    p.onclick = () => {
+      document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+      p.classList.add('active');
+      currentSet = DATA[key];
+      idx = 0;
+      updateCard();
+    };
+    container.appendChild(p);
+  });
+}
+
+function updateCard() {
+  const c = currentSet[idx];
+  document.getElementById('tag').innerText = "Card " + (idx + 1);
+  document.getElementById('question').innerText = c.q;
+  document.getElementById('answer').innerText = c.a;
+  document.getElementById('answer').classList.remove('shown');
+  document.getElementById('controls').style.display = 'none';
+}
+
+function reveal() {
+  if (currentSet.length === 0) return;
+  document.getElementById('answer').classList.add('shown');
+  document.getElementById('controls').style.display = 'flex';
+}
+
+function next() {
+  idx = (idx + 1) % currentSet.length;
+  updateCard();
+}
+
+function mark(success) {
+  next();
+}
+
+async function solve() {
+  const key = document.getElementById('api-key').value;
+  const input = document.getElementById('prob-input').value;
+  const out = document.getElementById('solution');
+  if (!key) return alert("API Key required");
+
+  out.style.display = 'block';
+  out.innerText = "Thinking...";
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${key}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: "Solve this NLO problem step-by-step: " + input }]
+        }]
+      })
+    });
+    const data = await response.json();
+    if (data.error) {
+      out.innerText = "Error: " + data.error.message;
+    } else {
+      out.innerText = data.candidates[0].content.parts[0].text;
+    }
+  } catch (e) {
+    out.innerText = "Error: " + e.message;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
