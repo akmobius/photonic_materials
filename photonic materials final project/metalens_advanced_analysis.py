@@ -86,33 +86,32 @@ def plot_emt_comparison(ax):
 
 # --- 3. Evanescent Wave Coupling & Decay Constant ---
 def plot_evanescent_coupling(ax):
-    diameters = np.linspace(0.2*Lambda, 0.8*Lambda, 200)
+    diameters = np.linspace(0.1*Lambda, 0.9*Lambda, 200)
     
     # Gap between pillars
     gap_d = Lambda - diameters
     
-    # Assuming the mode effective index scales linearly for this demonstration 
-    n_eff_assumed = 1.2 + 2.0 * (diameters - 0.2*Lambda) / (0.6*Lambda)
+    # Assuming the mode effective index scales linearly 
+    n_eff_assumed = 1.05 + 2.5 * (diameters - 0.1*Lambda) / (0.8*Lambda)
     
     # Decay constant in air: kappa = k0 * sqrt(n_eff^2 - n_air^2)
     k0 = 2 * np.pi / wl
-    # Protect against sqrt(<0) if n_eff drops below n_inc (which it doesn't here)
     kappa = k0 * np.sqrt(np.maximum(n_eff_assumed**2 - n_inc**2, 0.001))
     
-    # Decay length
-    decay_length = 1 / kappa
+    # Define significant interaction range (where evanescent field is still > 1.8%)
+    interaction_range = 4.0 / kappa
     
-    ax.plot(diameters, gap_d, 'k-', lw=2, label='Gap between Pillars ($d$)')
-    ax.plot(diameters, decay_length, 'm--', lw=2, label=r'Evanescent Decay Length ($1/\kappa$)')
+    ax.plot(diameters, gap_d, 'k-', lw=2, label='Physical Gap ($d$)')
+    ax.plot(diameters, interaction_range, 'm--', lw=2, label=r'Interaction Range ($4/\kappa$)')
     
-    # Fill region where coupling is strong (gap < decay length)
-    ax.fill_between(diameters, gap_d, decay_length, where=(gap_d < decay_length), 
-                    color='red', alpha=0.3, label='Strong Evanescent Coupling')
+    # Fill region where coupling is strong (gap < interaction range)
+    ax.fill_between(diameters, gap_d, interaction_range, where=(gap_d < interaction_range), 
+                    color='red', alpha=0.3, label='Danger Zone (Cross-Talk)')
     
     ax.set_title("Evanescent Wave Coupling Analysis")
     ax.set_xlabel(r"Pillar Diameter ($\mu$m)")
     ax.set_ylabel(r"Distance ($\mu$m)")
-    ax.legend()
+    ax.legend(loc='upper right')
     ax.grid(True, alpha=0.3)
 
 # --- Main Plotting ---
