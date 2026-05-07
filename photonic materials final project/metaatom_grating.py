@@ -126,7 +126,60 @@ try:
     axs[2].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.show()
 
 except ImportError:
     print("Could not import get_meta_atom_results from metaatom_fabryperot. Make sure it is in the same directory.")
+
+# --- Blazed Grating Supercell Visualization ---
+fig3, (ax_blaze, ax_eff) = plt.subplots(1, 2, figsize=(14, 5))
+
+# Plot 1: Blazed Grating Supercell
+supercell_size = 6
+x_supercell = np.arange(supercell_size) * pillar_spacing
+# Target blazed phase (linear ramp from 0 to 2pi)
+target_blaze_phase = np.linspace(0, 2*np.pi, supercell_size, endpoint=False)
+widths_blaze = pillar_spacing * (0.2 + 0.6 * (target_blaze_phase / (2 * np.pi)))
+
+for i, (x_pos, w, phase) in enumerate(zip(x_supercell, widths_blaze, target_blaze_phase)):
+    ax_blaze.add_patch(plt.Rectangle((x_pos - w/2, 0), w, 0.8, color='steelblue', alpha=0.8))
+    # Annotate the target phase
+    ax_blaze.text(x_pos, -0.2, f"$\phi$={phase/np.pi:.1f}$\pi$", ha='center', fontsize=10)
+
+# Draw the "blaze" wedge
+ax_blaze.plot([x_supercell[0]-pillar_spacing/2, x_supercell[-1]+pillar_spacing/2], [1.2, 2.0], 'r--', lw=2)
+ax_blaze.fill_between([x_supercell[0]-pillar_spacing/2, x_supercell[-1]+pillar_spacing/2], 1.2, [1.2, 2.0], color='red', alpha=0.1)
+
+ax_blaze.set_title("Local Blazed Grating Approximation (Supercell)")
+ax_blaze.set_xlim(-pillar_spacing, supercell_size * pillar_spacing)
+ax_blaze.set_ylim(-0.5, 2.5)
+ax_blaze.annotate("Ideal Blazed Phase Ramp", xy=(x_supercell[2], 1.7), color='red', fontweight='bold', ha='center')
+ax_blaze.axis('off') # Hide axes for cleaner look
+
+# Plot 2: Diffraction Efficiency Bar Chart
+orders_eff = [-2, -1, 0, 1, 2]
+# Illustrative efficiencies: most light goes into m=1 (target deflection), some into m=0 (transmission), etc.
+efficiencies = [0.05, 0.02, 0.15, 0.70, 0.08] 
+
+bars = ax_eff.bar(orders_eff, efficiencies, color=['gray', 'gray', 'orange', 'green', 'gray'])
+ax_eff.set_title("Illustrative Diffraction Efficiencies (Blazed Grating)")
+ax_eff.set_xlabel("Diffraction Order ($m$)")
+ax_eff.set_ylabel("Power Efficiency")
+ax_eff.set_xticks(orders_eff)
+ax_eff.set_ylim(0, 1.0)
+
+# Annotations
+bars[3].set_color('green')
+ax_eff.annotate("Target Deflection (m=1)\n(High Efficiency)", xy=(1, 0.7), xytext=(1, 0.85),
+                arrowprops=dict(facecolor='black', arrowstyle='->'), ha='center')
+
+bars[2].set_color('orange')
+ax_eff.annotate("Undiffracted Light\n(0th Order Loss)", xy=(0, 0.15), xytext=(-1, 0.4),
+                arrowprops=dict(facecolor='black', arrowstyle='->'), ha='center')
+
+ax_eff.annotate("Parasitic Orders", xy=(-2, 0.05), xytext=(-2.0, 0.3),
+                arrowprops=dict(facecolor='black', arrowstyle='->'), ha='center')
+ax_eff.annotate("Parasitic Orders", xy=(2, 0.08), xytext=(2.0, 0.3),
+                arrowprops=dict(facecolor='black', arrowstyle='->'), ha='center')
+
+fig3.tight_layout()
+plt.show()

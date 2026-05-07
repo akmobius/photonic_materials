@@ -23,6 +23,9 @@ def get_meta_atom_results(wavelength, h_range, n_core, n_sub):
     return np.array(trans_list), np.array(phase_list)
 
 # --- Configuration ---
+# NOTE: In fundamental 1D thin-film physics, phase is controlled by varying thickness (h).
+# This script demonstrates that basic Fabry-Pérot concept.
+# For practical metalens design, see metaatom_fabryperot.py where we fix height and sweep n_eff (radius).
 wl = 0.785
 n_Si, n_glass = 3.48, 1.45
 h_sweep = np.linspace(0.1, 1.0, 500)
